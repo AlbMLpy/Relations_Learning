@@ -1,7 +1,6 @@
 import numpy as np
 from numba import jit
 
-
 @jit(nopython=True) 
 def coo_tensor_gen(shape, density=0.02):
     nnz = int(density * shape[0] * shape[1] * shape[2])
