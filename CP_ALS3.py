@@ -8,23 +8,36 @@ def coo_tensor_gen(shape, density=0.02):
     n = np.random.choice(shape[1], nnz)
     k = np.random.choice(shape[2], nnz)
     vals = np.random.rand(nnz)
-    return np.vstack((m, n, k)).T, vals, nnz
+    return np.vstack((m, n, k)).T, vals
 
 
 @jit(nopython=True) 
-def check_coo_tensor(coo, nnz):
+def check_coo_tensor(coo):
     count = 0
-    for i in range(nnz):
-        for j in range(nnz):
+    for i in range(coo.shape[0]):
+        for j in range(coo.shape[0]):
             if (coo[i]==coo[j]).sum() == 3:
                 count += 1
                 if count > 1:
                     return "Bad"
         count = 0  
-  
+
+@jit(nopython=True)
+def gen_hilbert_tensor(shape):
+    coo = []
+    vals = []
+    for i in range(shape[0]):
+        for j in range(shape[1]):
+            for k in range(shape[2]):
+                coo.append((i, j, k))
+                vals.append(1 / (i + j + k + 3))
+    
+    coo = np.array(coo)
+    vals = np.array(vals)
+    return coo, vals     
 
 @jit(nopython=True) 
-def mttcrp(coo_tensor, vals, nnz, shape, mode, a, b):
+def mttcrp(coo_tensor, vals, shape, mode, a, b):
     temp = np.zeros(shape=(shape[mode], a.shape[1]))
     
     if mode == 0:
@@ -39,7 +52,7 @@ def mttcrp(coo_tensor, vals, nnz, shape, mode, a, b):
         mode_a = 0
         mode_b = 1
         
-    for item in range(nnz):
+    for item in range(coo_tensor.shape[0]):
         coord = coo_tensor[item]
         temp[coord[mode], :] += a[coord[mode_a], :] * b[coord[mode_b], :] * vals[item] 
     
@@ -48,8 +61,9 @@ def mttcrp(coo_tensor, vals, nnz, shape, mode, a, b):
 
 @jit(nopython=True) 
 def cp_als3(coo_tensor,
-            vals, nnz,
-            shape, rank=5,
+            vals,
+            shape,
+            rank=5,
             max_iter=200,
             tol=1e-8):
     
@@ -68,21 +82,21 @@ def cp_als3(coo_tensor,
         v2 = c.T @ c
         v = v1 * v2
         v = np.linalg.pinv(v)
-        a = mttcrp(coo_tensor, vals, nnz, shape, 0, b, c) @ v
+        a = mttcrp(coo_tensor, vals, shape, 0, b, c) @ v
         
         v1 = a.T @ a
         v2 = c.T @ c
         v = v1 * v2
         v = np.linalg.pinv(v)
-        b = mttcrp(coo_tensor, vals, nnz, shape, 1, a, c) @ v
+        b = mttcrp(coo_tensor, vals, shape, 1, a, c) @ v
         
         v1 = a.T @ a
         v2 = b.T @ b
         v = v1 * v2
         v = np.linalg.pinv(v)
-        c = mttcrp(coo_tensor, vals, nnz, shape, 2, a, b) @ v
+        c = mttcrp(coo_tensor, vals, shape, 2, a, b) @ v
         
-        error = sqrt_err_relative(coo_tensor, vals, nnz, shape, a, b, c)
+        error = sqrt_err_relative(coo_tensor, vals, shape, a, b, c)
         err_arr[it - 1] = error
         err2 = err1
         err1 = error
@@ -94,9 +108,9 @@ def cp_als3(coo_tensor,
 
 
 @jit(nopython=True) 
-def sqrt_err(coo_tensor, vals, nnz, shape, a, b, c):
+def sqrt_err(coo_tensor, vals, shape, a, b, c):
     result = 0.0
-    for item in range(nnz):
+    for item in range(coo_tensor.shape[0]):
         coord = coo_tensor[item]
         result += np.sqrt((vals[item] - np.sum(
             a[coord[0], :] * b[coord[1], :] * c[coord[2], :]))**2)        
@@ -104,8 +118,8 @@ def sqrt_err(coo_tensor, vals, nnz, shape, a, b, c):
 
 
 @jit(nopython=True) 
-def sqrt_err_relative(coo_tensor, vals, nnz, shape, a, b, c):
-    result = sqrt_err(coo_tensor, vals, nnz, shape, a, b, c)        
+def sqrt_err_relative(coo_tensor, vals, shape, a, b, c):
+    result = sqrt_err(coo_tensor, vals, shape, a, b, c)        
     return result / np.sqrt((vals**2).sum())
 
 
