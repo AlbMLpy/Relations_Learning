@@ -2,7 +2,7 @@ import numpy as np
 from numba import jit
 
 @jit(nopython=True) 
-def coo_tensor_gen(shape, density=0.02):
+def gen_coo_tensor(shape, density=0.02):
     nnz = int(density * shape[0] * shape[1] * shape[2])
     m = np.random.choice(shape[0], nnz)
     n = np.random.choice(shape[1], nnz)
