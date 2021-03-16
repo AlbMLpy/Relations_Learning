@@ -68,9 +68,12 @@ def cp_als3(coo_tensor,
             tol=1e-8,
             pr=True):
     
-    a = np.random.rand(shape[0], rank)
-    b = np.random.rand(shape[1], rank)
-    c = np.random.rand(shape[2], rank)
+    a = np.random.normal(0.0, 0.1, size=(shape[0], rank))
+    b = np.random.normal(0.0, 0.1, size=(shape[1], rank))
+    c = np.random.normal(0.0, 0.1, size=(shape[2], rank))
+    #a = np.random.rand(shape[0], rank)
+    #b = np.random.rand(shape[1], rank)
+    #c = np.random.rand(shape[2], rank)
     err_arr = np.empty((max_iter, 1))
     
     it = 0

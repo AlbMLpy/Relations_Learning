@@ -8,7 +8,9 @@ from general_functions import sqrt_err_relative
 def generate_system(coo_tensor, vals, shape, mode, a, b, l2, step):
     mtx = np.zeros((a.shape[1], a.shape[1]))
     right = np.zeros((a.shape[1]))
-    coo_step = coo_tensor[coo_tensor[:, mode] == step]
+    mask = coo_tensor[:, mode] == step
+    coo_step = coo_tensor[mask]
+    vals_step = vals[mask]
     
     if mode == 0:
         mode_a = 1 
@@ -31,7 +33,7 @@ def generate_system(coo_tensor, vals, shape, mode, a, b, l2, step):
                               * a[coord[mode_a], j] 
                               * b[coord[mode_b], j])
                 if i == 0:
-                    right[j] += a[coord[mode_a], j] * b[coord[mode_b], j] * vals[item]
+                    right[j] += a[coord[mode_a], j] * b[coord[mode_b], j] * vals_step[item]
             
             if i == j:
                 mtx[i, j] += l2
@@ -48,9 +50,9 @@ def wrcp_als3(coo_tensor,
               max_iter=50,
               tol=1e-8):
     
-    a = np.random.rand(shape[0], rank)
-    b = np.random.rand(shape[1], rank)
-    c = np.random.rand(shape[2], rank)
+    a = np.random.normal(0.0, 0.1, size=(shape[0], rank))
+    b = np.random.normal(0.0, 0.1, size=(shape[1], rank))
+    c = np.random.normal(0.0, 0.1, size=(shape[2], rank))
     err_arr = np.empty((max_iter, 1))  
     
     it = 0
@@ -69,6 +71,7 @@ def wrcp_als3(coo_tensor,
                                        l2,
                                        i)
             
+            #a[i, :] = np.linalg.pinv(A) @ right
             a[i, :] = np.linalg.solve(A, right)
             
         for j in range(shape[1]):
@@ -81,6 +84,7 @@ def wrcp_als3(coo_tensor,
                                        l2,
                                        j)
             
+            #b[j :] = np.linalg.pinv(A) @ right
             b[j :] = np.linalg.solve(A, right)
             
         for k in range(shape[2]):   
@@ -93,6 +97,7 @@ def wrcp_als3(coo_tensor,
                                        l2,
                                        k)
             
+            #c[k, :] = np.linalg.pinv(A) @ right
             c[k, :] = np.linalg.solve(A, right)
     
         error = sqrt_err_relative(coo_tensor, vals, shape, a, b, c)
@@ -103,4 +108,4 @@ def wrcp_als3(coo_tensor,
             print("iterations over")
             break
     
-    return a, b, c, err_arr
+    return a, b, c, err_arr, it
