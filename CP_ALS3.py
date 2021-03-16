@@ -109,7 +109,7 @@ def cp_als3(coo_tensor,
                 print("iterations over")
             break
     
-    return a, b, c, err_arr
+    return a, b, c, err_arr, it
 
 
 @jit(nopython=True) 
