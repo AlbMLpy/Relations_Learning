@@ -65,7 +65,8 @@ def cp_als3(coo_tensor,
             shape,
             rank=5,
             max_iter=200,
-            tol=1e-8):
+            tol=1e-8,
+            pr=True):
     
     a = np.random.rand(shape[0], rank)
     b = np.random.rand(shape[1], rank)
@@ -101,7 +102,8 @@ def cp_als3(coo_tensor,
         err2 = err1
         err1 = error
         if it == max_iter:
-            print("iterations over")
+            if pr:
+                print("iterations over")
             break
     
     return a, b, c, err_arr
