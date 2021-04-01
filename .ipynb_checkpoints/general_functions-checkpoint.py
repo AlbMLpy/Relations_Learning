@@ -1,5 +1,71 @@
 import numpy as np
+
 from numba import jit
+from numba.errors import NumbaDeprecationWarning, NumbaPendingDeprecationWarning
+import warnings
+
+warnings.simplefilter('ignore', category=NumbaDeprecationWarning)
+warnings.simplefilter('ignore', category=NumbaPendingDeprecationWarning)
+
+
+@jit(nopython=True)
+def create_filter(test_triple, all_triples, show=False, shift=1000):
+    filt = []
+    it = 0
+    for i in test_triple:
+        it += 1
+        if show:
+            if it % shift == 0:
+                print(it)
+                
+        filt_set = []
+        for j in all_triples:
+            if (i[0] == j[0]) and (i[1] == j[1]) and (i[2] != j[2]):
+                filt_set.append(j[2]) 
+           
+        filt.append(filt_set)
+    
+    return filt   
+
+
+@jit(nopython=True)
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+
+#@jit(nopython=True)
+def hr(test_filter, test_triples, a, b, c,
+       how_many=[1, 3, 10], iter_show=False, freq=3000):
+    
+    total = len(test_triples)
+    hit = [0, 0, 0, 0]
+    iteration = 0
+    for entity, filt in zip(test_triples, test_filter):
+        iteration += 1
+        p = entity[0]
+        q = entity[1]
+        r = entity[2]
+
+        candidate_values = np.sum(a[p, :] * b[q, :] * c, axis=1)
+        candidate_values = sigmoid(candidate_values)
+        
+        top = (np.argsort(candidate_values)[::-1]).tolist()   
+        
+        for obj in filt:
+            top.remove(obj)
+        
+        ind = top.index(r)
+        for i, h in enumerate(how_many):
+            if ind < h:
+                hit[i] += 1
+        hit[3] += 1 / (1 + ind)    
+                
+        if iter_show:
+            if iteration % freq == 0:
+                print(hit[2] / iteration, hit[2], iteration)
+            
+    return hit[0] / total, hit[1] / total, hit[2] / total, hit[3] / total
+
 
 
 @jit(nopython=True) 
