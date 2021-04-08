@@ -66,8 +66,11 @@ def cp_als3(coo_tensor,
             rank=5,
             max_iter=200,
             tol=1e-8,
-            pr=True):
+            seed=13,
+            show_iter=False,
+            it_over=True):
     
+    random_state = np.random.seed(seed)
     a = np.random.normal(0.0, 0.1, size=(shape[0], rank))
     b = np.random.normal(0.0, 0.1, size=(shape[1], rank))
     c = np.random.normal(0.0, 0.1, size=(shape[2], rank))
@@ -77,7 +80,6 @@ def cp_als3(coo_tensor,
     err1 = 1.0
     err2 = 0.0
     while np.abs(err1 - err2) > tol:
-        it += 1
 
         v1 = b.T @ b
         v2 = c.T @ c
@@ -97,12 +99,16 @@ def cp_als3(coo_tensor,
         v = np.linalg.pinv(v)
         c = mttcrp(coo_tensor, vals, shape, 2, a, b) @ v
         
+        it += 1
         error = sqrt_err_relative(coo_tensor, vals, shape, a, b, c)
         err_arr[it - 1] = error
         err2 = err1
         err1 = error
+        if show_iter:
+            print("Iter: ", it, "; Error: ", error)
+            
         if it == max_iter:
-            if pr:
+            if it_over:
                 print("iterations over")
             break
     

@@ -79,8 +79,7 @@ def wrcp_als3(coo_tensor,
               tol=1e-8,
               seed=13,
               show_iter=False,
-              it_over=True,
-              ):
+              it_over=True):
     
     random_state = np.random.seed(seed)#np.random if seed is None else np.random.RandomState(seed)
     
@@ -93,7 +92,6 @@ def wrcp_als3(coo_tensor,
     err1 = 1.0
     err2 = 0.0
     while np.abs(err1 - err2) > tol:
-        it += 1
         
         for i in range(shape[0]):
             A, right = generate_system(
@@ -121,7 +119,8 @@ def wrcp_als3(coo_tensor,
             
             #c[k, :] = np.linalg.pinv(A) @ right
             c[k, :] = np.linalg.solve(A, right)
-    
+        
+        it += 1
         error = sqrt_err_relative(coo_tensor, vals, shape, a, b, c)
         err_arr[it - 1] = error
         err2 = err1

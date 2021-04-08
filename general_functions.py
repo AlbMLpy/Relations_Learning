@@ -10,20 +10,23 @@ warnings.simplefilter('ignore', category=NumbaPendingDeprecationWarning)
 
 @jit(nopython=True)
 def create_filter(test_triple, all_triples, show=False, shift=1000):
+    """ Filter all true objects for a particular test triple """
+    
     filt = []
     it = 0
     for i in test_triple:
-        it += 1
-        if show:
-            if it % shift == 0:
-                print(it)
-                
         filt_set = []
         for j in all_triples:
             if (i[0] == j[0]) and (i[1] == j[1]) and (i[2] != j[2]):
                 filt_set.append(j[2]) 
            
         filt.append(filt_set)
+        
+        it += 1
+        if show:
+            if it % shift == 0:
+                print(it)
+                
     
     return filt   
 
@@ -36,12 +39,12 @@ def sigmoid(x):
 #@jit(nopython=True)
 def hr(test_filter, test_triples, a, b, c,
        how_many=[1, 3, 10], iter_show=False, freq=3000):
+    """ Calculate HR@[how_many] and MRR using filter """
     
     total = len(test_triples)
     hit = [0, 0, 0, 0]
     iteration = 0
     for entity, filt in zip(test_triples, test_filter):
-        iteration += 1
         p = entity[0]
         q = entity[1]
         r = entity[2]
@@ -59,7 +62,8 @@ def hr(test_filter, test_triples, a, b, c,
             if ind < h:
                 hit[i] += 1
         hit[3] += 1 / (1 + ind)    
-                
+        
+        iteration += 1
         if iter_show:
             if iteration % freq == 0:
                 print(hit[2] / iteration, hit[2], iteration)
