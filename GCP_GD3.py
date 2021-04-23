@@ -5,7 +5,7 @@ from numba import jit
 @jit(nopython=True) 
 def mttcrp(coo_tensor, vals, shape, mode, a, b):
     """
-        Calculate matricized-tensor times Khatri-Rao product. 
+        Calculate matricized-tensor times Khatri-Rao product.(Checked)
     """
     temp = np.zeros(shape=(shape[mode], a.shape[1]))
     
@@ -34,7 +34,11 @@ def get_elem_deriv_tensor(coo_tensor, vals, kruskal_vals, loss_function_grad):
         Calculate the elementwise derivative tensor Y.
     """
     
-    deriv_tensor_vals = loss_function_grad(vals, kruskal_vals) / vals.size
+    # deriv_tensor_vals = loss_function_grad(vals, kruskal_vals) / vals.size
+    
+    # without the devision on vals.size
+    deriv_tensor_vals = loss_function_grad(vals, kruskal_vals)
+    
     return deriv_tensor_vals    
 
 
@@ -102,7 +106,7 @@ def gcp_gd(coo_tensor,
            show_iter=False,
            it_over=True):
     """
-        Factorize initial sparse tensor by generalized CP decomposition.
+        Factorize initial sparse tensor by Generalized CP decomposition.
     """
     
     random_state = np.random.seed(seed)
